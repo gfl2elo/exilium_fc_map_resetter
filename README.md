@@ -1,22 +1,25 @@
 # Exilium expedition resetter
 
+vibe code disclaimer
+
 Rerolls Frontier Conquest until a map matches your tile rules. On a match, it chooses **Leave For Now**, verifies Frontier Conquest, then closes EXILIUM normally.
 
 ## 1. Install from scratch
 
-You need **64-bit Windows 10/11**, internet access, and Git installed. Install EXILIUM separately. Python and Tesseract do not need to be installed beforehand.
+You need **64-bit Windows 10/11**, internet access, and Git installed. Python and Tesseract do not need to be installed beforehand.
 
-1. On this repository's GitHub page, click **Code → HTTPS** and copy the clone URL.
-2. Open a PowerShell terminal in a writable location where you want the project installed.
-3. Clone the repository, enter its folder, and run setup. Replace `REPOSITORY_URL` below with the URL you copied:
+1. Create a folder wherever you want to keep the project, then open it in File Explorer.
+2. Click the address bar at the top, type `cmd`, and press **Enter**. Command Prompt opens in that folder.
+3. On this repository's GitHub page, click **Code → HTTPS** and copy the clone URL.
+4. Run the following commands in Command Prompt to clone the repository, enter its folder, and run the PowerShell installer.
 
-```powershell
-git clone REPOSITORY_URL exilium-reset
+```bat
+git clone https://github.com/gfl2elo/exilium_fc_map_resetter.git exilium-reset
 cd exilium-reset
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-The clone contains the scripts and settings. Setup creates a fresh `.venv` locally; do not copy one from another computer.
+The clone contains the scripts and settings. Setup creates a fresh `.venv`.
 
 The execution-policy option applies only to this installer process; it does not change the computer's saved policy. Windows may request administrator approval for a dependency installer.
 
@@ -50,7 +53,9 @@ Setup uses the exact WinGet IDs `Python.Python.3.13` and `UB-Mannheim.TesseractO
 
 Open EXILIUM at **Frontier Conquest**, with **Begin Expedition** visible and no expedition in progress. Use the English UI and the same wide window proportions as the reference screenshots. Keep the game visible and unobstructed.
 
-From a PowerShell terminal in this folder:
+> ![starting_screen_picture](/Screenshot%202026-09-11%20223720.png)
+
+In the same Command Prompt window, run the command below. If you closed it, open the cloned `exilium-reset` folder in File Explorer, type `cmd` in the address bar, and press **Enter** first, then do:
 
 ```powershell
 .\.venv\Scripts\python.exe .\reset.py
@@ -58,7 +63,7 @@ From a PowerShell terminal in this folder:
 
 Answer the prompts for map, resource-tile total, target, and early rejection. Enter keeps each default. You then have **four seconds** to switch to EXILIUM. Answers apply to this launch; edit `settings.json` to change saved defaults.
 
-Default: **map 6, Sanctus Valley**, with **8 shovels** or **7 shovels and 1 compass**. The total-tile question is required because detection cannot prove no unseen nodes remain.
+Brackets show defaults I set while testing.
 
 ## 3. Choose your target
 
@@ -105,4 +110,3 @@ On completion or exit, the script prints **Resets done** and **Time spent**. A r
 
 Each launch writes small JSON results and a final `summary.json` under `runs/`, including durations and local timestamps. Screenshots are processed in memory without permanent saves. Cleanup removes this script's leftover screenshots from older versions, preserving JSON records.
 
-Run only one copy at a time. No Codex schedule is required. Restart the automation after updating the scripts.
