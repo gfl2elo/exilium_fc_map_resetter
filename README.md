@@ -4,15 +4,19 @@ Rerolls Frontier Conquest until a map matches your tile rules. On a match, it ch
 
 ## 1. Install from scratch
 
-You need **64-bit Windows 10/11**, internet access, and this complete folder in a writable location. Install EXILIUM separately. Python and Tesseract do not need to be installed beforehand.
+You need **64-bit Windows 10/11**, internet access, and Git installed. Install EXILIUM separately. Python and Tesseract do not need to be installed beforehand.
 
-1. Extract or copy the entire `exilium-reset` folder, including `install.ps1`, the three Python files, `requirements.txt`, and `settings.json`. Do not copy another computer's `.venv` or `runs` folders.
-2. Open this folder in File Explorer, right-click empty space, and choose **Open in Terminal**. Use a PowerShell tab.
-3. Run:
+1. On this repository's GitHub page, click **Code → HTTPS** and copy the clone URL.
+2. Open a PowerShell terminal in a writable location where you want the project installed.
+3. Clone the repository, enter its folder, and run setup. Replace `REPOSITORY_URL` below with the URL you copied:
 
 ```powershell
+git clone REPOSITORY_URL exilium-reset
+cd exilium-reset
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 ```
+
+The clone contains the scripts and settings. Setup creates a fresh `.venv` locally; do not copy one from another computer.
 
 The execution-policy option applies only to this installer process; it does not change the computer's saved policy. Windows may request administrator approval for a dependency installer.
 
