@@ -5,6 +5,7 @@ import shutil
 import cv2
 import numpy as np
 import pytesseract
+from PIL import Image
 
 
 def configure_ocr(path=None):
@@ -17,6 +18,10 @@ def configure_ocr(path=None):
 def text(image, box=None, psm=6):
     if box:
         image = image.crop(tuple(round(v * s) for v, s in zip(box, image.size * 2)))
+    # Small HUD labels can turn the slash in "1/10" into a 7 at native
+    # resolution. Upscale before OCR while keeping exact screen verification.
+    if image.height < 64:
+        image = image.resize((image.width * 2, image.height * 2), Image.Resampling.LANCZOS)
     return pytesseract.image_to_string(image, config=f'--psm {psm}', timeout=10)
 
 

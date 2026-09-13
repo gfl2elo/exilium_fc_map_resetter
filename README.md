@@ -65,6 +65,34 @@ Answer the prompts for map, resource-tile total, target, and early rejection. En
 
 Brackets show defaults I set while testing.
 
+### Administrator rights and focus problems
+
+To check the running game's and script's administrator rights without clicking or changing focus:
+
+```bat
+.\.venv\Scripts\python.exe .\reset.py --diagnose
+```
+
+CMD and PowerShell both work. If the diagnostic reports `EXILIUM=True, Python=False`, the game is elevated while the script is not. Run both normally where possible: close the game and launcher, turn off unnecessary **Run this program as an administrator** settings in their Compatibility/shortcut properties, then reopen them. If the game requires elevation, use an administrator terminal for the script. The script checks for this mismatch before sending input.
+
+If Windows does not give EXILIUM focus at startup, you have another 15 seconds to switch to it. F8 and F9 remain available during this wait. During normal operation, a brief focus loss waits up to three seconds without sending input or taking focus; a persistent mismatch stops and reports the foreground window and last input. Losing focus during a held gesture releases the mouse and stops immediately.
+
+Clicks and scrolling verify that the cursor reached the intended point and is over EXILIUM, preventing input from landing on an overlay or taskbar. Press F9 and wait for **Paused** before switching apps; return to EXILIUM before resuming.
+
+The map-loading delay after spending the ticket is two seconds. OCR also enlarges small labels and reports the last text it read when a screen check times out.
+
+### Change the map-loading delay
+
+If your map needs more time to load after clicking **Expedition**, stop the script and open `reset.py` in a text editor. Inside the `enter()` function, find these lines:
+
+```python
+    game.click((.90, .935))
+    game.wait(2)
+    map_ready(game)
+```
+
+Change the `2` in this `game.wait(2)` to the number of seconds you want—for example, `game.wait(5)` waits five seconds. Save the file and restart the script. This applies to every selected map and does not change the four-second startup countdown.
+
 ## 3. Choose your target
 
 Supported types: `shovel`, `compass`, `radar`. Use an exact count, inclusive range, or `rest` for one type. Omitted types mean zero.
@@ -108,5 +136,4 @@ Map selections 1–7 are included; other layouts may need different totals or ca
 
 On completion or exit, the script prints **Resets done** and **Time spent**. A reset counts after abandoning a rejected map and verifying **Begin Expedition** again. Time accumulates across these completed cycles. Setup/countdown and the matching or interrupted attempt are excluded; pauses inside completed cycles are included.
 
-Each launch writes small JSON results and a final `summary.json` under `runs/`, including durations and local timestamps. Screenshots are processed in memory without permanent saves. Cleanup removes this script's leftover screenshots from older versions, preserving JSON records.
-
+Each launch writes small JSON results and a final `summary.json` under `runs/`, including durations and local timestamps. Only the **10 newest completed run folders** are kept; older completed folders and their contents are deleted at startup and after saving a summary. Screenshots are processed in memory without permanent saves. Screenshot cleanup also removes this script's leftover screenshots from older versions.

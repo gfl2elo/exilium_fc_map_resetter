@@ -6,16 +6,43 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sys
 import time
 
 import numpy as np
 
-from desktop import Game
+from desktop import Game, check_input_privileges, find_game_window
 import vision
 
 ROOT = Path(__file__).resolve().parent
 TYPES = ('shovel', 'compass', 'radar')
+
+
+def cleanup_summaries():
+    """Keep the ten newest completed run folders, including their results."""
+    root = ROOT.resolve() / 'runs'
+    if not root.exists():
+        return
+    if root.resolve() != root:
+        raise ValueError('Summary cleanup must stay inside this script\'s runs folder.')
+    folders = sorted(
+        (folder for folder in root.iterdir()
+         if re.fullmatch(r'\d{8}-\d{6}', folder.name)
+         and folder.is_dir() and folder.resolve() == folder
+         and (folder / 'summary.json').is_file()),
+        key=lambda folder: folder.name, reverse=True)
+    for folder in folders[10:]:
+        try:
+            # Validate the absolute target and reject redirected descendants.
+            if folder.resolve().parent != root:
+                continue
+            if any(path.resolve() != path for path in folder.rglob('*')):
+                print(f'Skipping summary folder containing links: {folder}', file=sys.stderr)
+                continue
+            shutil.rmtree(folder)
+        except OSError as exc:
+            print(f'Could not remove old summary folder {folder}: {exc}', file=sys.stderr)
 
 
 def cleanup_screenshots(folder):
@@ -121,16 +148,17 @@ def compact(value):
     return re.sub(r'[^a-z0-9]', '', value.lower())
 
 
-def wait_text(game, words, box, timeout=20):
+def wait_text(game, words, box, timeout=20, psm=6):
     deadline = game.active_clock() + timeout
+    recognized = ''
     while game.active_clock() < deadline:
         shot = game.capture()
-        recognized = vision.text(shot, box)
+        recognized = vision.text(shot, box, psm=psm)
         game.check()  # Honor F8/F9 pressed while OCR was working.
         if compact(words) in compact(recognized):
             return shot
         game.wait(.4)
-    raise RuntimeError(f'Expected screen text was not found: {words!r}')
+    raise RuntimeError(f'Expected screen text was not found: {words!r}; last OCR: {recognized.strip()!r}')
 
 
 def map_ready(game):
@@ -145,7 +173,10 @@ def enter(game, profile):
     # The caller has verified Frontier Conquest and started the reset timer.
     game.click((.885, .945))
     game.wait(1.5)
-    wait_text(game, profile['name'], (.07, .18, .95, .53))
+    # Map names sit over animated scenery and are unreliable in a full-grid
+    # OCR pass. Verify the picker's fixed label, then verify the selected name
+    # on its detail screen before pressing Expedition.
+    wait_text(game, 'Expedition Assessment Room', (.025, .90, .33, .98))
     game.click(profile['select'])
     wait_text(game, profile['name'], (.72, .015, .99, .17))
     wait_text(game, 'Expedition', (.85, .915, .945, .95))
@@ -158,7 +189,8 @@ def abandon(game):
     game.click((.12, .50))  # Dismiss any information card.
     map_ready(game)
     game.click((.028, .047))
-    wait_text(game, 'Pause Expedition', (.32, .14, .70, .26))
+    # Sparse text mode separates the heading from its tiny decorative subtitle.
+    wait_text(game, 'Pause Expedition', (.32, .14, .70, .26), psm=11)
     wait_text(game, 'Abandon Expedition', (.35, .50, .45, .61))
     game.click((.404, .465))
     wait_text(game, 'Do you wish', (.29, .41, .71, .56))
@@ -171,7 +203,7 @@ def leave_for_now(game):
     game.click((.12, .50))
     map_ready(game)
     game.click((.028, .047))
-    wait_text(game, 'Pause Expedition', (.32, .14, .70, .26))
+    wait_text(game, 'Pause Expedition', (.32, .14, .70, .26), psm=11)
     wait_text(game, 'Leave For Now', (.55, .50, .65, .61))
     game.click((.597, .465))
     # A saved expedition may show Continue Expedition rather than Begin.
@@ -258,11 +290,21 @@ def main():
     parser.add_argument('--tiles', type=int, help='Expected total resource nodes.')
     parser.add_argument('--max-attempts', type=int, default=0, help='0 means continue until a match.')
     parser.add_argument('--inspect', action='store_true', help='Inspect the already-open map once; never abandon it.')
+    parser.add_argument('--diagnose', action='store_true', help='Check game and Python privileges without clicking or changing focus.')
     parser.add_argument('--no-prompt', action='store_true', help='Use settings/arguments without asking questions (for unattended runs).')
     parser.add_argument('--early-reject', action=argparse.BooleanOptionalAction, default=None, help='Abandon as soon as all target mixes are impossible.')
     parser.add_argument('--countdown', type=int, help='Seconds to wait after setup (default: 4).')
     args = parser.parse_args()
+    if args.diagnose:
+        try:
+            check_input_privileges(find_game_window())
+            print('Privilege check passed. No game actions were performed.')
+            return 0
+        except (OSError, RuntimeError) as exc:
+            print(f'Diagnostic: {exc}', file=sys.stderr)
+            return 1
     removed, freed = cleanup_screenshots(ROOT / 'runs')
+    cleanup_summaries()
     if removed:
         print(f'Cleaned up {removed} old screenshots ({freed / 1024 ** 2:.1f} MiB).', flush=True)
     config = json.loads(args.config.read_text(encoding='utf-8'))
@@ -376,6 +418,7 @@ def main():
                    'finished_local': datetime.now().astimezone().isoformat(timespec='milliseconds')}
         try:
             (run / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
+            cleanup_summaries()
         except OSError as exc:
             print(f'Could not save summary: {exc}', file=sys.stderr)
 
