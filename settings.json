@@ -1,0 +1,76 @@
+{
+  "map": 6,
+  "tiles": 8,
+  "accept": [
+    {
+      "shovel": 8
+    },
+    {
+      "shovel": 7,
+      "compass": 1
+    }
+  ],
+  "early_reject": true,
+  "countdown_seconds": 4,
+  "tesseract": null,
+  "max_pans": 4,
+  "pan_start": [
+    0.52,
+    0.42
+  ],
+  "pan_end": [
+    0.52,
+    0.75
+  ],
+  "maps": {
+    "1": {
+      "name": "Periphery Frontline",
+      "select": [
+        0.15,
+        0.44
+      ]
+    },
+    "2": {
+      "name": "Turul Outskirts",
+      "select": [
+        0.265,
+        0.312
+      ]
+    },
+    "3": {
+      "name": "Marte Industrial Complex",
+      "select": [
+        0.38,
+        0.42
+      ]
+    },
+    "4": {
+      "name": "Lonepeak Town",
+      "select": [
+        0.5,
+        0.312
+      ]
+    },
+    "5": {
+      "name": "Falkeborg",
+      "select": [
+        0.615,
+        0.435
+      ]
+    },
+    "6": {
+      "name": "Sanctus Valley",
+      "select": [
+        0.735,
+        0.312
+      ]
+    },
+    "7": {
+      "name": "Sanctuary",
+      "select": [
+        0.875,
+        0.435
+      ]
+    }
+  }
+}
